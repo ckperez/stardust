@@ -1,20 +1,9 @@
-import cx from 'classnames'
 import React from 'react'
-import { FelaTheme } from 'react-fela'
-
-import getClasses from './getClasses'
-import getElementType from './getElementType'
-import getUnhandledProps from './getUnhandledProps'
-import callable from './callable'
-
-export interface IRenderResultConfig {
-  ElementType: React.ComponentType<any>
-  rest: { [key: string]: any }
-  classes: { [key: string]: string }
-}
+import renderComponent, { IRenderResultConfig } from './renderComponent'
 
 class UIComponent<P, S> extends React.Component<P, S> {
   private readonly childClass = this.constructor as typeof UIComponent
+  static defaultProps: { [key: string]: any }
   static displayName: string
   static className: string
   static variables?: any
@@ -28,38 +17,16 @@ class UIComponent<P, S> extends React.Component<P, S> {
   }
 
   render() {
-    const { rules, variables } = this.childClass
-
-    return (
-      <FelaTheme
-        render={theme => {
-          const ElementType = getElementType(this.childClass, this.props)
-          const rest = getUnhandledProps(this.childClass, this.props)
-          const { siteVariables = {}, componentVariables = {} } = theme
-          const variablesFromFile = callable(variables)(siteVariables)
-          const variablesFromTheme = callable(componentVariables[this.childClass.displayName])(
-            siteVariables,
-          )
-          const variablesFromProp = callable(this.props.variables)(siteVariables)
-
-          const mergedVariables = () =>
-            Object.assign({}, variablesFromFile, variablesFromTheme, variablesFromProp)
-
-          const classes = getClasses(this.props, rules, mergedVariables, theme)
-
-          classes.root = cx(this.childClass.className, classes.root, this.props.className)
-
-          const config: IRenderResultConfig = {
-            ElementType,
-            rest,
-            classes,
-          }
-
-          return this.renderComponent(config)
-        }}
-      />
-    )
+    return renderComponent({
+      className: this.childClass.className,
+      defaultProps: this.childClass.defaultProps,
+      displayName: this.childClass.displayName,
+      handledProps: this.childClass.handledProps,
+      props: this.props,
+      rules: this.childClass.rules,
+      variables: this.childClass.variables,
+    }, this.renderComponent)
   }
 }
 
-export default UIComponent
+export default UIComponent as any

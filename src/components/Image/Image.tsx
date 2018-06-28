@@ -36,12 +36,7 @@ class Image extends UIComponent<any, any> {
     as: 'img',
   }
 
-  // TODO: exists only for doc detection, remove once react-docgen is replaced
-  render() {
-    return null
-  }
-
-  renderComponent({ ElementType, classes, rest }) {
+  render({ ElementType, classes, rest }) {
     return <ElementType {...rest} className={classes.root} />
   }
 }
