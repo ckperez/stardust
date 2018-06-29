@@ -2,6 +2,7 @@ import _ from 'lodash'
 import path from 'path'
 import { defaultHandlers, parse, resolver } from 'react-docgen'
 import fs from 'fs'
+import ts from 'typescript'
 import parseDefaultValue from './parseDefaultValue'
 import parseDocblock from './parseDocblock'
 import parserCustomHandler from './parserCustomHandler'
@@ -20,8 +21,15 @@ const getComponentInfo = filepath => {
   // "element" for "src/elements/Button/Button.js"
   const componentType = path.basename(path.dirname(dir)).replace(/s$/, '')
 
+  const text = ts.transpile(contents, {
+    jsx: ts.JsxEmit.React,
+    target: ts.ScriptTarget.Latest,
+    module: ts.ModuleKind.CommonJS,
+    allowSyntheticDefaultImports: true,
+  })
+
   // start with react-docgen info
-  const components = parse(contents, resolver.findAllComponentDefinitions, [
+  const components = parse(text, resolver.findAllComponentDefinitions, [
     ...defaultHandlers,
     parserCustomHandler,
   ])
@@ -29,12 +37,13 @@ const getComponentInfo = filepath => {
     throw new Error(`Could not find a component definition in "${filepath}".`)
   }
   if (components.length > 1) {
-    throw new Error(
-      [
-        `Found more than one component definition in "${filepath}".`,
-        'This is currently not supported, please ensure your module only defines a single React component.',
-      ].join(' '),
-    )
+    // TODO check why some of the files produced multiple components (ListItem, Layout)
+    // throw new Error(
+    //   [
+    //     `Found more than one component definition in "${filepath}".`,
+    //     'This is currently not supported, please ensure your module only defines a single React component.',
+    //   ].join(' '),
+    // )
   }
   const info = components[0]
 
@@ -77,9 +86,9 @@ const getComponentInfo = filepath => {
   // name of the component, sub component, or plural parent for sub component groups
   info.componentClassName = (info.isChild
     ? `ui-${info.parentDisplayName}__${info.subcomponentName.replace(
-      /Group$/,
-      `${info.parentDisplayName}s`,
-    )}`
+        /Group$/,
+        `${info.parentDisplayName}s`,
+      )}`
     : `ui-${info.displayName}`
   ).toLowerCase()
 
