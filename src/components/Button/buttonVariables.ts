@@ -1,10 +1,10 @@
-import { rem } from '../../lib'
+import { pxToRem } from '../../lib'
 
 export default () => {
   const vars: any = {}
 
-  vars.circularRadius = rem(999)
-  vars.circularWidth = rem(4.2)
+  vars.circularRadius = pxToRem(9999)
+  vars.circularWidth = pxToRem(42)
 
   return vars
 }
